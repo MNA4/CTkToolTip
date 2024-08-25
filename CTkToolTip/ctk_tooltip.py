@@ -71,7 +71,7 @@ class CTkToolTip(Toplevel):
         self.alpha = alpha
         self.border_width = border_width
         self.padding = padding
-        self.bg_color = ctk.ThemeManager.theme["CTkFrame"]["fg_color"] if bg_color is None else bg_color
+        self.bg_color = customtkinter.ThemeManager.theme["CTkFrame"]["fg_color"] if bg_color is None else bg_color
         self.border_color = border_color
         self.wmousedown = False
         self.whover = False
@@ -92,13 +92,13 @@ class CTkToolTip(Toplevel):
         self.transparent_frame = Frame(self, bg=self.transparent_color)
         self.transparent_frame.pack(padx=0, pady=0, fill="both", expand=True)
 
-        self.frame = ctk.CTkFrame(self.transparent_frame, bg_color=self.transparent_color,
+        self.frame = customtkinter.CTkFrame(self.transparent_frame, bg_color=self.transparent_color,
                                             corner_radius=self.corner_radius,
                                             border_width=self.border_width, fg_color=self.bg_color,
                                             border_color=self.border_color)
         self.frame.pack(padx=0, pady=0, fill="both", expand=True)
 
-        self.message_label = ctk.CTkLabel(self.frame, textvariable=self.messageVar, **message_kwargs)
+        self.message_label = customtkinter.CTkLabel(self.frame, textvariable=self.messageVar, **message_kwargs)
         self.message_label.pack(fill="both", padx=self.padding[0] + self.border_width,
                                 pady=self.padding[1] + self.border_width, expand=True)
 
@@ -106,7 +106,7 @@ class CTkToolTip(Toplevel):
             if self.frame.cget("fg_color") == self.widget.cget("bg_color"):
                 if not bg_color:
                     self._top_fg_color = self.frame._apply_appearance_mode(
-                        ctk.ThemeManager.theme["CTkFrame"]["top_fg_color"])
+                        customtkinter.ThemeManager.theme["CTkFrame"]["top_fg_color"])
                     if self._top_fg_color != self.transparent_color:
                         self.frame.configure(fg_color=self._top_fg_color)
 
