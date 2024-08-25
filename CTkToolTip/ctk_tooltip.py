@@ -41,7 +41,7 @@ class CTkToolTip(Toplevel):
 
         if sys.platform.startswith("win"):
             self.transparent_color = self.widget._apply_appearance_mode(
-                customtkinter.ThemeManager.theme["CTkToplevel"]["fg_color"])
+                ctk.ThemeManager.theme["CTkToplevel"]["fg_color"])
             self.attributes("-transparentcolor", self.transparent_color)
             self.transient()
         elif sys.platform.startswith("darwin"):
@@ -59,7 +59,7 @@ class CTkToolTip(Toplevel):
         self.config(background=self.transparent_color)
 
         # StringVar instance for msg string
-        self.messageVar = customtkinter.StringVar()
+        self.messageVar = ctk.StringVar()
         self.message = message
         self.messageVar.set(self.message)
 
@@ -71,8 +71,10 @@ class CTkToolTip(Toplevel):
         self.alpha = alpha
         self.border_width = border_width
         self.padding = padding
-        self.bg_color = customtkinter.ThemeManager.theme["CTkFrame"]["fg_color"] if bg_color is None else bg_color
+        self.bg_color = ctk.ThemeManager.theme["CTkFrame"]["fg_color"] if bg_color is None else bg_color
         self.border_color = border_color
+        self.wmousedown = False
+        self.whover = False
         self.disable = False
 
         # visibility status of the ToolTip inside|outside|visible
@@ -90,13 +92,13 @@ class CTkToolTip(Toplevel):
         self.transparent_frame = Frame(self, bg=self.transparent_color)
         self.transparent_frame.pack(padx=0, pady=0, fill="both", expand=True)
 
-        self.frame = customtkinter.CTkFrame(self.transparent_frame, bg_color=self.transparent_color,
+        self.frame = ctk.CTkFrame(self.transparent_frame, bg_color=self.transparent_color,
                                             corner_radius=self.corner_radius,
                                             border_width=self.border_width, fg_color=self.bg_color,
                                             border_color=self.border_color)
         self.frame.pack(padx=0, pady=0, fill="both", expand=True)
 
-        self.message_label = customtkinter.CTkLabel(self.frame, textvariable=self.messageVar, **message_kwargs)
+        self.message_label = ctk.CTkLabel(self.frame, textvariable=self.messageVar, **message_kwargs)
         self.message_label.pack(fill="both", padx=self.padding[0] + self.border_width,
                                 pady=self.padding[1] + self.border_width, expand=True)
 
@@ -104,17 +106,37 @@ class CTkToolTip(Toplevel):
             if self.frame.cget("fg_color") == self.widget.cget("bg_color"):
                 if not bg_color:
                     self._top_fg_color = self.frame._apply_appearance_mode(
-                        customtkinter.ThemeManager.theme["CTkFrame"]["top_fg_color"])
+                        ctk.ThemeManager.theme["CTkFrame"]["top_fg_color"])
                     if self._top_fg_color != self.transparent_color:
                         self.frame.configure(fg_color=self._top_fg_color)
 
         # Add bindings to the widget without overriding the existing ones
-        self.widget.bind("<Enter>", self.on_enter, add="+")
-        self.widget.bind("<Leave>", self.on_leave, add="+")
+        if type(self.widget) in [customtkinter.CTkButton, customtkinter.CTkRadioButton, customtkinter.CTkSlider]:
+            self.widget.bind("<ButtonRelease-1>", self.on_leave, add="+")
+            self.widget.bind("<ButtonPress-1>", self.bpress_dummy, add="+")
+            self.widget.bind("<ButtonRelease-1>", self.brelease_dummy, add="+")
+        
+        self.widget.bind("<Enter>", self.enter_dummy , add="+")
+        self.widget.bind("<Leave>", self.leave_dummy, add="+")
+        
         self.widget.bind("<Motion>", self.on_enter, add="+")
         self.widget.bind("<B1-Motion>", self.on_enter, add="+")
         self.widget.bind("<Destroy>", lambda _: self.hide(), add="+")
 
+    def enter_dummy(self, event):
+        self.whover = True
+        self.on_enter(event)
+        
+    def leave_dummy(self, event):
+        self.whover = False
+        self.on_leave(event)
+        
+    def bpress_dummy(self, *args):
+        self.wmousedown = True
+        
+    def brelease_dummy(self, *args):
+        self.wmousedown = False
+        
     def show(self) -> None:
         """
         Enable the widget.
@@ -158,12 +180,13 @@ class CTkToolTip(Toplevel):
         # Time is in integer: milliseconds
         self.after(int(self.delay * 1000), self._show)
 
-    def on_leave(self, event=None) -> None:
+    def on_leave(self, *args) -> None:
         """
         Hides the ToolTip temporarily.
         """
 
         if self.disable: return
+        if (self.wmousedown or self.whover): return
         self.status = "outside"
         self.withdraw()
 
@@ -210,3 +233,4 @@ class CTkToolTip(Toplevel):
 
         self.messageVar.set(message)
         self.message_label.configure(**kwargs)
+
