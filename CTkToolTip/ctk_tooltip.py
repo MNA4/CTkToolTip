@@ -41,7 +41,7 @@ class CTkToolTip(Toplevel):
 
         if sys.platform.startswith("win"):
             self.transparent_color = self.widget._apply_appearance_mode(
-                ctk.ThemeManager.theme["CTkToplevel"]["fg_color"])
+                customtkinter.ThemeManager.theme["CTkToplevel"]["fg_color"])
             self.attributes("-transparentcolor", self.transparent_color)
             self.transient()
         elif sys.platform.startswith("darwin"):
@@ -59,7 +59,7 @@ class CTkToolTip(Toplevel):
         self.config(background=self.transparent_color)
 
         # StringVar instance for msg string
-        self.messageVar = ctk.StringVar()
+        self.messageVar = customtkinter.StringVar()
         self.message = message
         self.messageVar.set(self.message)
 
